@@ -1,3 +1,6 @@
+from substackframe import *
+import sys
+
 with open("dictionary.txt", "r") as f:
 	d = [i.lower() for i in f.read().split("\n") if len(i) > 0]
 #~ d = d + ["devices", "security", "reputation", "it", "earned", "nsas", 'at', 'the', "a", "bletchley", "codenamed", 'was', "is", "an", "securing", "communications", "and"]
@@ -84,6 +87,38 @@ def crack(ct, seed = None):
 				master_keys.append(i)
 	return master_keys
 
+def getlenNsubsets(ls, n):
+	r = []
+	if n == 1:
+	for i in range(n):
+		
+
+def hellaCrack(ct):
+	words = ct.split(" ")
+	for blocked_words in range(words):
+		
+
+def getKeyMatches(word):
+	r = []
+	for d_word in d:
+		p = pattern_match(word, d_word)
+		if p != None:
+			r.append(p)
+	return r
+
+def pad(text, length = len("xxx.xxx.xxx.xxx"), pad = " "):
+	if len(text) > length:
+		if length > 10:
+			return text[:length - 3] + "..."
+		return text[:length]
+	else:
+		return text + (pad * (length - len(text)))
+def map_(small, big, current):
+	return float(current - small)/float(big - small)
+def percentagebar(small, big, current, bars = 20):
+	percent = map_(small, big, current)
+	bar = int(round(bars * percent))
+
 import random
 secret_key = {}
 values = list("abcdefghijklmnopqrstuvwxyz")
@@ -95,10 +130,9 @@ print secret_message
 
 ct = decrypt(secret_message, invert(secret_key))
 
+for word in secret_message.split(" "):
+	print "%s %s" % (word, len(getKeyMatches(word)))
 
-#~ ct1 = "k wkau pz nhofmu yzp puo tzmphkyo ze kiyzjvo ofao jrp puo tzmphkyo ze puo aphoyrzra vkeo"
-
-print ct
-for i in crack(ct):
-	print i
-	print  decrypt(ct, i)
+k = crack(ct)
+for i in k:
+	print decrypt(ct, i)
