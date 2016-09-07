@@ -1,9 +1,9 @@
-from substackframe import *
+from itertools import combinations
 import sys
+import time
 
-with open("dictionary.txt", "r") as f:
+with open("/home/qazxvy/Documents/Code/Github/substitution-ciphersolver/20k.txt", "r") as f:
 	d = [i.lower() for i in f.read().split("\n") if len(i) > 0]
-#~ d = d + ["devices", "security", "reputation", "it", "earned", "nsas", 'at', 'the', "a", "bletchley", "codenamed", 'was', "is", "an", "securing", "communications", "and"]
 
 def invert(key):
 	key_inverse = {}
@@ -23,15 +23,35 @@ def pattern_match(a, b): #ciphertext, plaintext
 		key[a[i]] = b[i]
 	return key
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+def warning(x):
+	return bcolors.WARNING + x + bcolors.ENDC
+def fail(x):
+	return bcolors.FAIL + x + bcolors.ENDC
+UPPERCASE = map(chr, range(65, 91))
+LOWERCASE = map(chr, range(97, 123))
 def decrypt(ct, key):
 	r = ""
 	for i in ct:
 		if i.lower() in key:
-			r += key[i]
+			if i in LOWERCASE:
+				r += key[i.lower()]
+			elif i in UPPERCASE:
+				r += key[i.lower()].upper()
+		elif i in UPPERCASE or i in LOWERCASE:
+			r += fail(i)
 		elif i == " ":
 			r += i
 		else:
-			r += i.upper()
+			r += warning(i)
 	return r
 
 def combine(key1, key2):
@@ -56,16 +76,8 @@ def combine(key1, key2):
 	return combined_key
 
 def crack(ct, seed = None):
-	words = [i.lower() for i in ct.split(" ")]
-	words_tree = [[] for i in range(len(words))]
-	for i in range(len(words)):
-		for w in d:
-			key = pattern_match(words[i], w)
-			if key != None:
-				words_tree[i].append(key)
+	words_tree = [getKeyMatches(i) for i in [i.lower() for i in ct.split(" ")]]
 	words_tree.sort(key = lambda x: len(x)) #increases efficiency by a shitton
-	
-	#need to account for words that aren't in the dict
 	
 	if seed == None:
 		master_keys = words_tree[0]
@@ -79,24 +91,29 @@ def crack(ct, seed = None):
 				c_key = combine(m_key, new_key)
 				if c_key != None:
 					new_master_keys.append(c_key)
-		#~ print new_master_keys
-		#~ if len(new_master_keys) < 1:
 		master_keys = []
 		for i in new_master_keys:
 			if i not in master_keys:
 				master_keys.append(i)
 	return master_keys
 
-def getlenNsubsets(ls, n):
-	r = []
-	if n == 1:
-	for i in range(n):
-		
-
-def hellaCrack(ct):
-	words = ct.split(" ")
-	for blocked_words in range(words):
-		
+def hellaCrack(ct, seed = None): #seed for key is for very edge cases, manual inputting
+	words = []
+	for i in ct.split(" "):
+		if i not in words and len(getKeyMatches(i)) > 0: words.append(i) #remove duplicates
+	for l in range(1, len(words) + 1)[::-1]: #words: start at all, then length - 1, length - 2, etc.
+		#BUG: sys.stdout.write(...) fails
+		print ("trying with %s/%s words" % (l, len(words)))
+		c = 1
+		combos = combinations(words, l)
+		temp = combinations(words, l)
+		possibilities = len(list(temp))
+		for i in list(combos): #one iteration per list of selected words
+			print ("%s - %s/%s" % (percentagebar(0, possibilities, c), c, possibilities))
+			test = crack(" ".join(list(i)), seed)
+			if len(test) > 0:
+				return test
+			c += 1
 
 def getKeyMatches(word):
 	r = []
@@ -106,7 +123,7 @@ def getKeyMatches(word):
 			r.append(p)
 	return r
 
-def pad(text, length = len("xxx.xxx.xxx.xxx"), pad = " "):
+def pad(text, length = 79, pad = " "):
 	if len(text) > length:
 		if length > 10:
 			return text[:length - 3] + "..."
@@ -118,21 +135,47 @@ def map_(small, big, current):
 def percentagebar(small, big, current, bars = 20):
 	percent = map_(small, big, current)
 	bar = int(round(bars * percent))
+	return "[%s]" % (pad("="*bar, bars))
 
-import random
-secret_key = {}
-values = list("abcdefghijklmnopqrstuvwxyz")
-for i in "abcdefghijklmnopqrstuvwxyz":
-	secret_key[i] = values.pop(random.choice(range(len(values))))
-print secret_key
-secret_message = " ".join(random.choice(d) for i in range(10))
-print secret_message
+#"MCU tfjph pqib nf nsumi nsb xumd xbxwbyc fa nsb J.C. qmnbppqobmeb efxxjmqnd tsf tfyi nf ibbl fjy efjmnyd cuab."
 
-ct = decrypt(secret_message, invert(secret_key))
+def stripPunctuation(word):
+	while word[-1] not in UPPERCASE + LOWERCASE:
+		word = word[:-1]
+	while word[0] not in UPPERCASE + LOWERCASE:
+		word = word[1:]
+	return word.replace("'", "")
 
-for word in secret_message.split(" "):
-	print "%s %s" % (word, len(getKeyMatches(word)))
+def purifyCT(CT):
+	ct = []
+	for word in CT.split(" "):
+		good = True
+		word = stripPunctuation(word)
+		for char in word:
+			if char not in UPPERCASE + LOWERCASE:
+				good = False
+		if good:
+			ct.append(word.lower())
+	return " ".join(ct)
 
-k = crack(ct)
-for i in k:
-	print decrypt(ct, i)
+def main(CT = None):
+	if CT == None:
+		if len(sys.argv) < 2:
+			print "enter ciphertext:"
+			CT = raw_input(">")
+		else:
+			CT = " ".join(sys.argv[1:])
+	start_time = time.time()
+	
+	ct = purifyCT(CT)
+	k = hellaCrack(ct)
+	t = time.time() - start_time
+	print "%s solutions found in %s seconds" % (len(k), t)
+	for i in range(len(k)):
+		print "-"*(40) + pad(str(i), 40, "-")
+		print decrypt(CT, k[i])
+		print k[i]
+	return k, t
+
+if __name__ == "__main__":
+	main()
