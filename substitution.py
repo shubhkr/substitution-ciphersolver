@@ -95,6 +95,21 @@ def crack(ct, seed = None):
 		for i in new_master_keys:
 			if i not in master_keys:
 				master_keys.append(i)
+	
+	#tk new
+	master_keys = sorted(master_keys, key = lambda k: sum(map(lambda x: d.index(x), decrypt(ct, k).split(" "))))
+	
+	#~ most_popular = {}
+	#~ smallest_sum = None
+	#~ for k in master_keys:
+		#~ s = 
+		#~ if smallest_sum == None:
+			#~ smallest_sum = s
+			#~ most_popular = k
+		#~ else:
+			#~ if smallest_sum > s:
+				#~ smallest_sum = s
+				#~ most_popular = k
 	return master_keys
 
 def hellaCrack(ct, seed = None): #seed for key is for very edge cases, manual inputting
@@ -158,7 +173,7 @@ def purifyCT(CT):
 			ct.append(word.lower())
 	return " ".join(ct)
 
-def main(CT = None):
+def main(CT = None, ismain = False):
 	if CT == None:
 		if len(sys.argv) < 2:
 			print "enter ciphertext:"
@@ -170,12 +185,13 @@ def main(CT = None):
 	ct = purifyCT(CT)
 	k = hellaCrack(ct)
 	t = time.time() - start_time
-	print "%s solutions found in %s seconds" % (len(k), t)
-	for i in range(len(k)):
-		print "-"*(40) + pad(str(i), 40, "-")
-		print decrypt(CT, k[i])
-		print k[i]
+	if ismain:
+		print "%s solutions found in %s seconds" % (len(k), t)
+		for i in range(len(k)):
+			print "-"*(40) + pad(str(i), 40, "-")
+			print decrypt(CT, k[i])
+			print k[i]
 	return k, t
 
 if __name__ == "__main__":
-	main()
+	main("IGH OXCKHQQVCYTB KCCIMTBB KXTYZGVQH KXCF OVIIQMRXEG, OT, GTQ DCY QVA BHTERH IVIBHQ, FCXH IGTY TYN CIGHX IHTF QVYZH IGH FHXEHX.", True)
