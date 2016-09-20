@@ -96,20 +96,7 @@ def crack(ct, seed = None):
 			if i not in master_keys:
 				master_keys.append(i)
 	
-	#tk new
 	master_keys = sorted(master_keys, key = lambda k: sum(map(lambda x: d.index(x), decrypt(ct, k).split(" "))))
-	
-	#~ most_popular = {}
-	#~ smallest_sum = None
-	#~ for k in master_keys:
-		#~ s = 
-		#~ if smallest_sum == None:
-			#~ smallest_sum = s
-			#~ most_popular = k
-		#~ else:
-			#~ if smallest_sum > s:
-				#~ smallest_sum = s
-				#~ most_popular = k
 	return master_keys
 
 def hellaCrack(ct, seed = None): #seed for key is for very edge cases, manual inputting
@@ -117,18 +104,20 @@ def hellaCrack(ct, seed = None): #seed for key is for very edge cases, manual in
 	for i in ct.split(" "):
 		if i not in words and len(getKeyMatches(i)) > 0: words.append(i) #remove duplicates
 	for l in range(1, len(words) + 1)[::-1]: #words: start at all, then length - 1, length - 2, etc.
-		#BUG: sys.stdout.write(...) fails
 		print ("trying with %s/%s words" % (l, len(words)))
 		c = 1
 		combos = combinations(words, l)
 		temp = combinations(words, l)
 		possibilities = len(list(temp))
 		for i in list(combos): #one iteration per list of selected words
-			print ("%s - %s/%s" % (percentagebar(0, possibilities, c), c, possibilities))
+			sys.stdout.write("\r%s - %s/%s" % (percentagebar(0, possibilities, c), c, possibilities))
+			sys.stdout.flush()
 			test = crack(" ".join(list(i)), seed)
 			if len(test) > 0:
+				print
 				return test
 			c += 1
+		print
 
 def getKeyMatches(word):
 	r = []
@@ -159,7 +148,7 @@ def stripPunctuation(word):
 		word = word[:-1]
 	while word[0] not in UPPERCASE + LOWERCASE:
 		word = word[1:]
-	return word.replace("'", "")
+	return word.replace("'", "").replace(".", " ").replace("-", " ")
 
 def purifyCT(CT):
 	ct = []
@@ -167,13 +156,13 @@ def purifyCT(CT):
 		good = True
 		word = stripPunctuation(word)
 		for char in word:
-			if char not in UPPERCASE + LOWERCASE:
+			if char not in UPPERCASE + LOWERCASE + [" "]:
 				good = False
 		if good:
 			ct.append(word.lower())
 	return " ".join(ct)
 
-def main(CT = None, ismain = False):
+def main(CT = None, ismain = __name__ == "__main__"):
 	if CT == None:
 		if len(sys.argv) < 2:
 			print "enter ciphertext:"
@@ -194,4 +183,6 @@ def main(CT = None, ismain = False):
 	return k, t
 
 if __name__ == "__main__":
-	main("IGH OXCKHQQVCYTB KCCIMTBB KXTYZGVQH KXCF OVIIQMRXEG, OT, GTQ DCY QVA BHTERH IVIBHQ, FCXH IGTY TYN CIGHX IHTF QVYZH IGH FHXEHX.", True)
+	main("MC.VHMTGR CSZSWAU FJTBAM GRA GACZ 'DGAZ' QRTWA DRA QJCNAM SG GRA BSGTJBSW DFTABFA YJHBMSGTJB TB GRA ASCWU 2000D.")
+	#~ main("MCU tfjph pqib nf nsumi nsb xumd xbxwbyc fa nsb J.C. qmnbppqobmeb efxxjmqnd tsf tfyi nf ibbl fjy efjmnyd cuab.")
+	#~ main("IGH OXCKHQQVCYTB KCCIMTBB KXTYZGVQH KXCF OVIIQMRXEG, OT, GTQ DCY QVA BHTERH IVIBHQ, FCXH IGTY TYN CIGHX IHTF QVYZH IGH FHXEHX.")
