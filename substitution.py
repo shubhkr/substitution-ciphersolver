@@ -1,9 +1,11 @@
 from itertools import combinations
 import sys
 import time
+from os import path
 
-with open("/home/qazxvy/Documents/Code/Github/substitution-ciphersolver/20k.txt", "r") as f:
-	d = [i.lower() for i in f.read().split("\n") if len(i) > 0]
+with open(path.join(path.dirname(__file__), "100k.txt"), "r") as f:
+	full_dict = [i.lower() for i in f.read().split("\n") if len(i) > 0] #tk there's some interesting stuff to find out the optimal dict size.
+d = full_dict[:26000]
 
 def invert(key):
 	key_inverse = {}
@@ -38,7 +40,7 @@ def fail(x):
 	return bcolors.FAIL + x + bcolors.ENDC
 UPPERCASE = map(chr, range(65, 91))
 LOWERCASE = map(chr, range(97, 123))
-def decrypt(ct, key):
+def decrypt(ct, key, color = True):
 	r = ""
 	for i in ct:
 		if i.lower() in key:
@@ -47,11 +49,17 @@ def decrypt(ct, key):
 			elif i in UPPERCASE:
 				r += key[i.lower()].upper()
 		elif i in UPPERCASE or i in LOWERCASE:
-			r += fail(i)
+			if color:
+				r += fail(i)
+			else:
+				r += i
 		elif i == " ":
 			r += i
 		else:
-			r += warning(i)
+			if color:
+				r += warning(i)
+			else:
+				r += i
 	return r
 
 def combine(key1, key2):
@@ -74,6 +82,7 @@ def combine(key1, key2):
 		else:
 			combined_key[i] = key2[i]
 	return combined_key
+	
 
 def crack(ct, seed = None):
 	words_tree = [getKeyMatches(i) for i in [i.lower() for i in ct.split(" ")]]
@@ -117,6 +126,12 @@ def hellaCrack(ct, seed = None): #seed for key is for very edge cases, manual in
 				print
 				return test
 			c += 1
+		#~ if l == len(words): #tk
+			#~ print "\nincreasing dict size"
+			#~ global d
+			#~ d = full_dict[:40000]
+		#~ else:
+			#~ print
 		print
 
 def getKeyMatches(word):
@@ -180,9 +195,45 @@ def main(CT = None, ismain = __name__ == "__main__"):
 			print "-"*(40) + pad(str(i), 40, "-")
 			print decrypt(CT, k[i])
 			print k[i]
+		print
 	return k, t
 
 if __name__ == "__main__":
-	main("MC.VHMTGR CSZSWAU FJTBAM GRA GACZ 'DGAZ' QRTWA DRA QJCNAM SG GRA BSGTJBSW DFTABFA YJHBMSGTJB TB GRA ASCWU 2000D.")
-	#~ main("MCU tfjph pqib nf nsumi nsb xumd xbxwbyc fa nsb J.C. qmnbppqobmeb efxxjmqnd tsf tfyi nf ibbl fjy efjmnyd cuab.")
-	#~ main("IGH OXCKHQQVCYTB KCCIMTBB KXTYZGVQH KXCF OVIIQMRXEG, OT, GTQ DCY QVA BHTERH IVIBHQ, FCXH IGTY TYN CIGHX IHTF QVYZH IGH FHXEHX.")
+	NSA_CTs = ["MC.VHMTGR CSZSWAU FJTBAM GRA GACZ 'DGAZ' QRTWA DRA QJCNAM SG GRA BSGTJBSW DFTABFA YJHBMSGTJB TB GRA ASCWU 2000D.",
+				"MCU tfjph pqib nf nsumi nsb xumd xbxwbyc fa nsb J.C. qmnbppqobmeb efxxjmqnd tsf tfyi nf ibbl fjy efjmnyd cuab.",
+				"IGH OXCKHQQVCYTB KCCIMTBB KXTYZGVQH KXCF OVIIQMRXEG, OT, GTQ DCY QVA BHTERH IVIBHQ, FCXH IGTY TYN CIGHX IHTF QVYZH IGH FHXEHX.",
+				'"MKRR GUH UKRU" AR K GHVUQALDH XE VXNMPXNARAQW KOOAGAXQKS NKVUAQHR XQ K QHGYXPJ KEGHP XQH AR RDVVHRREDSSZ HBMSXAGHO."']
+	import random
+	def _time(f, repeat, *args):
+		start_time = time.time()
+		for i in range(repeat):
+			f(*args)
+		return time.time() - start_time
+	
+	def rand_word(l):
+		return "".join([random.choice(LOWERCASE) for i in range(l)])
+	
+	def rand_pt(l, known_to):
+		di = full_dict[:known_to]
+		return " ".join([random.choice(di) for i in range(l)])
+	
+	def rand_key():
+		k = {}
+		l = map(chr, range(97, 123))
+		for i in range(ord("a"), ord("z") + 1):
+			k[chr(i)] = l.pop(random.choice(range(len(l))))
+		return k
+	
+	len_CT = 10
+	test_count = 50
+	key = rand_key()
+	solution = []
+	for unknown in range(4):
+		total = 0
+		for t in range(test_count):
+			ct = decrypt(rand_pt(len_CT - unknown, 26000) + " ".join([rand_word(random.choice(range(5, 10))) for i in range(unknown+1)]), key)
+			print "length:", len(ct.split(" "))
+			total += _time(main, 1, ct, False)
+		solution.append("%s	%s" % (unknown, total))
+	print "\n".join(solution)
+	
