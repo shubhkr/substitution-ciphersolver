@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from itertools import combinations
 import sys
 import time
