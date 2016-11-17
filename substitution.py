@@ -126,12 +126,12 @@ def hellaCrack(ct, seed = None): #seed for key is for very edge cases, manual in
 				print
 				return test
 			c += 1
-		#~ if l == len(words): #tk
-			#~ print "\nincreasing dict size"
-			#~ global d
-			#~ d = full_dict[:40000]
-		#~ else:
-			#~ print
+		if l == len(words): #tk
+			print "\nincreasing dict size"
+			global d
+			d = full_dict[:40000]
+		else:
+			print
 		print
 
 def getKeyMatches(word):
@@ -156,24 +156,30 @@ def percentagebar(small, big, current, bars = 20):
 	bar = int(round(bars * percent))
 	return "[%s]" % (pad("="*bar, bars))
 
-#"MCU tfjph pqib nf nsumi nsb xumd xbxwbyc fa nsb J.C. qmnbppqobmeb efxxjmqnd tsf tfyi nf ibbl fjy efjmnyd cuab."
-
 def stripPunctuation(word):
-	while word[-1] not in UPPERCASE + LOWERCASE:
+	while word[-1] not in UPPERCASE + LOWERCASE + map(str, range(10)):
 		word = word[:-1]
-	while word[0] not in UPPERCASE + LOWERCASE:
+	while word[0] not in UPPERCASE + LOWERCASE + map(str, range(10)):
 		word = word[1:]
 	return word.replace("'", "").replace(".", " ").replace("-", " ")
+
+def isnumber(n):
+	for i in n:
+		if i not in map(str, range(10)):
+			return False
+	return True
 
 def purifyCT(CT):
 	ct = []
 	for word in CT.split(" "):
+		if len(word) == 0:
+			continue
 		good = True
 		word = stripPunctuation(word)
 		for char in word:
 			if char not in UPPERCASE + LOWERCASE + [" "]:
 				good = False
-		if good:
+		if good and not isnumber(word):
 			ct.append(word.lower())
 	return " ".join(ct)
 
@@ -202,7 +208,8 @@ if __name__ == "__main__":
 	NSA_CTs = ["MC.VHMTGR CSZSWAU FJTBAM GRA GACZ 'DGAZ' QRTWA DRA QJCNAM SG GRA BSGTJBSW DFTABFA YJHBMSGTJB TB GRA ASCWU 2000D.",
 				"MCU tfjph pqib nf nsumi nsb xumd xbxwbyc fa nsb J.C. qmnbppqobmeb efxxjmqnd tsf tfyi nf ibbl fjy efjmnyd cuab.",
 				"IGH OXCKHQQVCYTB KCCIMTBB KXTYZGVQH KXCF OVIIQMRXEG, OT, GTQ DCY QVA BHTERH IVIBHQ, FCXH IGTY TYN CIGHX IHTF QVYZH IGH FHXEHX.",
-				'"MKRR GUH UKRU" AR K GHVUQALDH XE VXNMPXNARAQW KOOAGAXQKS NKVUAQHR XQ K QHGYXPJ KEGHP XQH AR RDVVHRREDSSZ HBMSXAGHO."']
+				'"MKRR GUH UKRU" AR K GHVUQALDH XE VXNMPXNARAQW KOOAGAXQKS NKVUAQHR XQ K QHGYXPJ KEGHP XQH AR RDVVHRREDSSZ HBMSXAGHO."',
+				'CZP LKT FPEUOTKPE "FYGTMI" QE CZP WHKVTU OPVPQEP YL Q WPOEYM\'E LHVV MQSP, FQCP YL KTOCZ, QFFOPEE QMF WTUCHOP.']
 	import random
 	def _time(f, repeat, *args):
 		start_time = time.time()
