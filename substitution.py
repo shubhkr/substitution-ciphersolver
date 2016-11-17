@@ -2,8 +2,9 @@ from itertools import combinations
 import sys
 import time
 from os import path
+import platform
 
-with open(path.join(path.dirname(__file__), "100k.txt"), "r") as f:
+with open(path.join(path.dirname(__file__), "100k.txt"), "rU") as f:
 	full_dict = [i.lower() for i in f.read().split("\n") if len(i) > 0] #tk there's some interesting stuff to find out the optimal dict size.
 d = full_dict[:26000]
 
@@ -41,6 +42,10 @@ def fail(x):
 UPPERCASE = map(chr, range(65, 91))
 LOWERCASE = map(chr, range(97, 123))
 def decrypt(ct, key, color = True):
+	if color:
+		if platform.system() != "Linux":
+			print "\ncoloring only supported on linux"
+			color = False
 	r = ""
 	for i in ct:
 		if i.lower() in key:
@@ -157,6 +162,8 @@ def percentagebar(small, big, current, bars = 20):
 	return "[%s]" % (pad("="*bar, bars))
 
 def stripPunctuation(word):
+	if word[-2] == "'":
+		word = word[-2:] #tk could try seeding word[-1] as s
 	while word[-1] not in UPPERCASE + LOWERCASE + map(str, range(10)):
 		word = word[:-1]
 	while word[0] not in UPPERCASE + LOWERCASE + map(str, range(10)):
