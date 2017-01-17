@@ -163,12 +163,18 @@ def percentagebar(small, big, current, bars = 20):
 	return "[%s]" % (pad("="*bar, bars))
 
 def stripPunctuation(word):
-	if word[-2] == "'":
-		word = word[-2:] #tk could try seeding word[-1] as s
+	if len(word) > 2:
+		if word[-2] == "'":
+			word = word[-2:] #tk could try seeding word[-1] as s
 	while word[-1] not in UPPERCASE + LOWERCASE + map(str, range(10)):
 		word = word[:-1]
-	while word[0] not in UPPERCASE + LOWERCASE + map(str, range(10)):
-		word = word[1:]
+		if len(word) == 0:
+			break
+	if len(word) != 0:
+		while word[0] not in UPPERCASE + LOWERCASE + map(str, range(10)):
+			word = word[1:]
+			if len(word) == 0:
+				break
 	return word.replace("'", "").replace(".", " ").replace("-", " ")
 
 def isnumber(n):
