@@ -45,7 +45,7 @@ LOWERCASE = map(chr, range(97, 123))
 def decrypt(ct, key, color = True):
 	if color:
 		if platform.system() != "Linux":
-			print "\ncoloring only supported on linux"
+			#print "\ncoloring only supported on linux"
 			color = False
 	r = ""
 	for i in ct:
@@ -76,10 +76,12 @@ def combine(key1, key2):
 			if key1[i] != key2[i]:  #must match
 				return None
 	#must be true of all values as well
-	indexes = invert(key1).keys() + invert(key2).keys()
+	k1inv = invert(key1)
+	k2inv = invert(key2)
+	indexes = k1inv.keys() + k2inv.keys()
 	for i in indexes:
-		if i in invert(key1) and i in invert(key2): #if not distinct
-			if invert(key1)[i] != invert(key2)[i]:  #must match
+		if i in k1inv and i in k2inv: #if not distinct
+			if k1inv[i] != k2inv[i]:  #must match
 				return None
 	combined_key = {}
 	for i in key1.keys() + key2.keys():
@@ -91,14 +93,18 @@ def combine(key1, key2):
 	
 
 def crack(ct, seed = None):
+	start_time = time.time()
 	words_tree = [getKeyMatches(i) for i in [i.lower() for i in ct.split(" ")]]
 	words_tree.sort(key = lambda x: len(x)) #increases efficiency by a shitton
-	
+	#~ print "initialization: " + str(time.time() - start_time)
+	#~ print map(len, words_tree)
 	if seed == None:
 		master_keys = words_tree[0]
 		words_tree = words_tree[1:]
 	else:
 		master_keys = [seed]
+	start_time = time.time() #tk
+	
 	for new_keys in words_tree:    #cycle through each next set
 		new_master_keys = []
 		for new_key in new_keys:       #each possible key of the next word
@@ -106,12 +112,13 @@ def crack(ct, seed = None):
 				c_key = combine(m_key, new_key)
 				if c_key != None:
 					new_master_keys.append(c_key)
+		#~ print len(new_master_keys)
 		master_keys = []
 		for i in new_master_keys:
 			if i not in master_keys:
 				master_keys.append(i)
 	
-	master_keys = sorted(master_keys, key = lambda k: sum(map(lambda x: d.index(x), decrypt(ct, k).split(" "))))
+	master_keys = sorted(master_keys, key = lambda k: sum(map(lambda x: d.index(x), decrypt(ct, k).split(" ")))) #sort by popularity of word
 	return master_keys
 
 def hellaCrack(ct, seed = None): #seed for key is for very edge cases, manual inputting
@@ -223,7 +230,8 @@ if __name__ == "__main__":
 				"MCU tfjph pqib nf nsumi nsb xumd xbxwbyc fa nsb J.C. qmnbppqobmeb efxxjmqnd tsf tfyi nf ibbl fjy efjmnyd cuab.",
 				"IGH OXCKHQQVCYTB KCCIMTBB KXTYZGVQH KXCF OVIIQMRXEG, OT, GTQ DCY QVA BHTERH IVIBHQ, FCXH IGTY TYN CIGHX IHTF QVYZH IGH FHXEHX.",
 				'"MKRR GUH UKRU" AR K GHVUQALDH XE VXNMPXNARAQW KOOAGAXQKS NKVUAQHR XQ K QHGYXPJ KEGHP XQH AR RDVVHRREDSSZ HBMSXAGHO."',
-				'CZP LKT FPEUOTKPE "FYGTMI" QE CZP WHKVTU OPVPQEP YL Q WPOEYM\'E LHVV MQSP, FQCP YL KTOCZ, QFFOPEE QMF WTUCHOP.']
+				'CZP LKT FPEUOTKPE "FYGTMI" QE CZP WHKVTU OPVPQEP YL Q WPOEYM\'E LHVV MQSP, FQCP YL KTOCZ, QFFOPEE QMF WTUCHOP.',
+				'LNDT G JGT FZPOD GTA HGZDTZDA NDC ADFSRT MPC G HGHDC VGR JGQNSTD, JGCRGCDZ D. BTSRNZ MSODA G OGLFKSZ GTA LGF GLGCADA ZND HGZDTZ ST 1871. BTSRNZ NDOA 87 HGZDTZF ST NDC OSMDZSJD.']
 	import random
 	def _time(f, repeat, *args):
 		start_time = time.time()
@@ -244,7 +252,14 @@ if __name__ == "__main__":
 		for i in range(ord("a"), ord("z") + 1):
 			k[chr(i)] = l.pop(random.choice(range(len(l))))
 		return k
-	
+	c = 0
+	print purifyCT(NSA_CTs[c])
+	start_time = time.time()
+	ks = crack(purifyCT(NSA_CTs[c]))
+	print "solved in %s seconds" % (time.time() - start_time)
+	for i in ks:
+		print decrypt(NSA_CTs[c], i)
+	exit()
 	len_CT = 10
 	test_count = 50
 	key = rand_key()
